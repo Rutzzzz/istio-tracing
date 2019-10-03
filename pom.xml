@@ -44,11 +44,13 @@
     <version.arquillian-junit>1.5.0.Final</version.arquillian-junit>
     <version.assertj>3.13.2</version.assertj>
     <version.awaitility>4.0.1</version.awaitility>
+    <version.com.google.code.gson>2.8.5</version.com.google.code.gson>
     <version.fabric8-maven-plugin>4.2.0</version.fabric8-maven-plugin>
     <version.junit>4.12</version.junit>
     <version.maven-resources-plugin>3.1.0</version.maven-resources-plugin>
     <version.maven-surefire-plugin>2.22.2</version.maven-surefire-plugin>
     <version.maven-war-plugin>3.2.3</version.maven-war-plugin>
+    <version.org.jboss.arquillian.drone>2.5.1</version.org.jboss.arquillian.drone>
     <version.restassured>4.1.1</version.restassured>
     <version.thorntail>2.5.0.Final</version.thorntail>
 
