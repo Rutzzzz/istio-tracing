@@ -16,10 +16,13 @@
  */
 package io.thorntail.example;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.arquillian.cube.istio.api.IstioResource;
@@ -35,6 +38,8 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.remote.DesiredCapabilities;
+import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import static io.restassured.RestAssured.given;
@@ -79,7 +84,7 @@ public class OpenshiftIT {
                 .statusCode(200)
                 .body("content", startsWith("Hello"));
 
-        driver.get(jaegerQuery);
+        driver.get(jaegerQuery + "/api/traces?service=istio-ingressgateway&start=" + startTime);
         driver.findElement(By.className("btn-primary")).submit();
         driver.findElement(By.id("inputUsername")).sendKeys("developer");
         driver.findElement(By.id("inputPassword")).sendKeys("developer");
@@ -89,19 +94,22 @@ public class OpenshiftIT {
             WebElement approve = driver.findElement(By.name("approve"));
             approve.submit();
 
-        } catch (NoSuchElementException ex) {
+        } catch (NoSuchElementException|IllegalStateException ex) {
+            System.out.println("NOT FOUND");
         }
 
         await().atMost(20, TimeUnit.SECONDS).untilAsserted(() -> {
             driver.get(jaegerQuery + "/api/traces?service=istio-ingressgateway&start=" + startTime);
             JsonObject jsonObject = new JsonParser().parse(driver.getPageSource()).getAsJsonObject();
-            List<String> serviceNames = jsonObject.get("data").getAsJsonArray()
-                    .get(0).getAsJsonObject()
+
+            JsonArray data = jsonObject.get("data").getAsJsonArray();
+            assertThat(data).isNotEmpty();
+
+            List<String> serviceNames = data.get(0).getAsJsonObject()
                     .get("processes").getAsJsonObject()
                     .entrySet()
                     .stream().map(c -> c.getValue().getAsJsonObject().get("serviceName").toString())
                     .collect(Collectors.toList());
-
             assertThat(serviceNames)
                     .isNotEmpty()
                     .filteredOn(s -> s.contains("thorntail"))
