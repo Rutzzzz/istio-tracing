@@ -16,13 +16,12 @@
  */
 package io.thorntail.example;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.arquillian.cube.istio.api.IstioResource;
@@ -38,8 +37,6 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.remote.DesiredCapabilities;
-import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import static io.restassured.RestAssured.given;
@@ -101,9 +98,12 @@ public class OpenshiftIT {
         await().atMost(20, TimeUnit.SECONDS).untilAsserted(() -> {
             driver.get(jaegerQuery + "/api/traces?service=istio-ingressgateway&start=" + startTime);
             JsonObject jsonObject = new JsonParser().parse(driver.getPageSource()).getAsJsonObject();
+            assertThat(jsonObject).isNotNull();
 
-            JsonArray data = jsonObject.get("data").getAsJsonArray();
-            assertThat(data).isNotEmpty();
+            JsonElement jsonElement = jsonObject.get("data");
+            assertThat(jsonElement).isNotNull().satisfies(c -> c.isJsonArray());
+            JsonArray data = jsonElement.getAsJsonArray();
+            assertThat(data).isNotNull().isNotEmpty();
 
             List<String> serviceNames = data.get(0).getAsJsonObject()
                     .get("processes").getAsJsonObject()
